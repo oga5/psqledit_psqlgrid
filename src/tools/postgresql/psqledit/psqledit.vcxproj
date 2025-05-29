@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|Win32">
+      <Configuration>Template</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|x64">
+      <Configuration>Template</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+    <Keyword>MFCProj</Keyword>
+    <ProjectGuid>{5C902F5C-555F-421A-B8D9-4EE44AF5C91C}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\..\..\..\exe\$(Configuration)\$(Platform)\$(TargetName)\</OutDir>
+    <IntDir>..\..\..\..\obj\$(Configuration)\$(Platform)\$(TargetName)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\..\..\..\exe\$(Configuration)\$(Platform)\$(TargetName)\</OutDir>
+    <IntDir>..\..\..\..\obj\$(Configuration)\$(Platform)\$(TargetName)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\..\..\..\exe\$(Configuration)\$(Platform)\$(TargetName)\</OutDir>
+    <IntDir>..\..\..\..\obj\$(Configuration)\$(Platform)\$(TargetName)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\..\..\..\exe\$(Configuration)\$(Platform)\$(TargetName)\</OutDir>
+    <IntDir>..\..\..\..\obj\$(Configuration)\$(Platform)\$(TargetName)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>false</MinimalRebuild>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>.;../../common;../../dbcommon;../commonsrc;../../../libs/ostrutil;../../../libs/pglib;../../../libs/octrllib;../../../libs/ofileutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;UNICODE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)data
+copy data\*.txt          $(OutDir)data
+mkdir   $(OutDir)doc
+copy doc\*.txt $(OutDir)doc
+</Command>
+    </PostBuildEvent>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\../../../../exe/Debug/psqledit\psqledit.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0411</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\lib\$(Configuration)\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>imm32.lib;version.lib;ostrutil.lib;octrllib.lib;ofileutil.lib;pglib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>wWinMainCRTStartup</EntryPointSymbol>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>false</MinimalRebuild>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>.;../../common;../../dbcommon;../commonsrc;../../../libs/ostrutil;../../../libs/pglib;../../../libs/octrllib;../../../libs/ofileutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;UNICODE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)data
+copy data\*.txt          $(OutDir)data
+mkdir   $(OutDir)doc
+copy doc\*.txt $(OutDir)doc
+</Command>
+    </PostBuildEvent>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\../../../../exe/Debug/psqledit\psqledit.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0411</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\lib\$(Configuration)\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>imm32.lib;version.lib;ostrutil.lib;octrllib.lib;ofileutil.lib;pglib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>wWinMainCRTStartup</EntryPointSymbol>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>.;../../common;../../dbcommon;../commonsrc;../../../libs/ostrutil;../../../libs/pglib;../../../libs/octrllib;../../../libs/ofileutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;UNICODE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)data
+copy data\*.txt          $(OutDir)data
+mkdir   $(OutDir)doc
+copy doc\*.txt $(OutDir)doc
+</Command>
+    </PostBuildEvent>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\../../../../exe/Release/psqledit\psqledit.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0411</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\lib\$(Configuration)\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <BaseAddress>
+      </BaseAddress>
+      <AdditionalDependencies>imm32.lib;version.lib;ostrutil.lib;octrllib.lib;ofileutil.lib;pglib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>wWinMainCRTStartup</EntryPointSymbol>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>.;../../common;../../dbcommon;../commonsrc;../../../libs/ostrutil;../../../libs/pglib;../../../libs/octrllib;../../../libs/ofileutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;UNICODE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)data
+copy data\*.txt          $(OutDir)data
+mkdir   $(OutDir)doc
+copy doc\*.txt $(OutDir)doc
+</Command>
+    </PostBuildEvent>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\../../../../exe/Release/psqledit\psqledit.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0411</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\lib\$(Configuration)\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <BaseAddress>
+      </BaseAddress>
+      <AdditionalDependencies>imm32.lib;version.lib;ostrutil.lib;octrllib.lib;ofileutil.lib;pglib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>wWinMainCRTStartup</EntryPointSymbol>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\libs\octrllib\ComboBoxUtil.cpp" />
+    <ClCompile Include="..\..\..\libs\octrllib\ScrollWnd.cpp" />
+    <ClCompile Include="..\..\common\AccelList.cpp" />
+    <ClCompile Include="..\..\common\BindParamEditorDlg.cpp" />
+    <ClCompile Include="..\..\common\BindParamGridCtrl.cpp" />
+    <ClCompile Include="..\..\common\diff_util.cpp" />
+    <ClCompile Include="..\..\common\NameInputDlg.cpp" />
+    <ClCompile Include="..\..\common\ShowCLobDlg.cpp" />
+    <ClCompile Include="..\..\dbcommon\FilterEditCtrl.cpp" />
+    <ClCompile Include="..\..\dbcommon\GridFilterDlg.cpp" />
+    <ClCompile Include="..\..\dbcommon\ReplaceDlg.cpp" />
+    <ClCompile Include="..\..\dbcommon\SearchDlg.cpp" />
+    <ClCompile Include="..\commonsrc\common.cpp" />
+    <ClCompile Include="..\commonsrc\ConnectInfoDlg.cpp" />
+    <ClCompile Include="..\commonsrc\ConnectList.cpp" />
+    <ClCompile Include="..\commonsrc\LoginDlg.cpp" />
+    <ClCompile Include="AboutDlg.cpp" />
+    <ClCompile Include="AcceleratorDlg.cpp" />
+    <ClCompile Include="CancelDlg.cpp" />
+    <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="completion_util.cpp" />
+    <ClCompile Include="DownloadDlg.cpp" />
+    <ClCompile Include="EditorOptionPage.cpp" />
+    <ClCompile Include="EditorOptionPage2.cpp" />
+    <ClCompile Include="FuncOptionPage.cpp" />
+    <ClCompile Include="FuncOptionPage2.cpp" />
+    <ClCompile Include="getsrc.cpp" />
+    <ClCompile Include="getsrc2.cpp" />
+    <ClCompile Include="GridOptionPage.cpp" />
+    <ClCompile Include="GridSortDlg.cpp" />
+    <ClCompile Include="GridView.cpp" />
+    <ClCompile Include="LineJumpDlg.cpp" />
+    <ClCompile Include="lintsql.cpp" />
+    <ClCompile Include="localsql.cpp" />
+    <ClCompile Include="LogEditData.cpp" />
+    <ClCompile Include="macro.cpp" />
+    <ClCompile Include="MainFrm.cpp" />
+    <ClCompile Include="ObjectBar.cpp" />
+    <ClCompile Include="ObjectDetailBar.cpp" />
+    <ClCompile Include="OptionSheet.cpp" />
+    <ClCompile Include="pggriddata.cpp" />
+    <ClCompile Include="PrintDlg.cpp" />
+    <ClCompile Include="psqledit.cpp" />
+    <ClCompile Include="PSqlEditCtrl.cpp" />
+    <ClCompile Include="psqleditDoc.cpp" />
+    <ClCompile Include="psql_util.cpp" />
+    <ClCompile Include="QueryCloseDlg.cpp" />
+    <ClCompile Include="scr_pass.cpp" />
+    <ClCompile Include="SetupPage.cpp" />
+    <ClCompile Include="ShortCutKeyDlg.cpp" />
+    <ClCompile Include="shortcutsql.cpp" />
+    <ClCompile Include="ShortCutSqlDlg.cpp" />
+    <ClCompile Include="ShortCutSqlListDlg.cpp" />
+    <ClCompile Include="sizecbar.cpp" />
+    <ClCompile Include="SQLEditView.cpp" />
+    <ClCompile Include="SQLExplainView.cpp" />
+    <ClCompile Include="SqlLibraryDlg.cpp" />
+    <ClCompile Include="SqlListMaker.cpp" />
+    <ClCompile Include="sqllog.cpp" />
+    <ClCompile Include="SqlLogDlg.cpp" />
+    <ClCompile Include="SqlLogFileDlg.cpp" />
+    <ClCompile Include="sqlparse.cpp" />
+    <ClCompile Include="sqlparser.cpp" />
+    <ClCompile Include="sqlstrtoken.cpp" />
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="TabBar.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="psqledit.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\common\AccelList.h" />
+    <ClInclude Include="..\..\common\BindParamEditorDlg.h" />
+    <ClInclude Include="..\..\common\BindParamGridCtrl.h" />
+    <ClInclude Include="..\..\common\diff_util.h" />
+    <ClInclude Include="..\..\common\NameInputDlg.h" />
+    <ClInclude Include="..\..\common\ShowCLobDlg.h" />
+    <ClInclude Include="..\..\dbcommon\FilterEditCtrl.h" />
+    <ClInclude Include="..\..\dbcommon\GridFilterDlg.h" />
+    <ClInclude Include="..\..\dbcommon\ReplaceDlg.h" />
+    <ClInclude Include="..\..\dbcommon\SearchDlg.h" />
+    <ClInclude Include="..\..\dbcommon\SearchDlgData.h" />
+    <ClInclude Include="..\commonsrc\common.h" />
+    <ClInclude Include="..\commonsrc\ConnectInfoDlg.h" />
+    <ClInclude Include="..\commonsrc\ConnectList.h" />
+    <ClInclude Include="..\commonsrc\LoginDlg.h" />
+    <ClInclude Include="..\commonsrc\ProfNameFolder.h" />
+    <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="AcceleratorDlg.h" />
+    <ClInclude Include="CancelDlg.h" />
+    <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="command_list.h" />
+    <ClInclude Include="completion_util.h" />
+    <ClInclude Include="default_accel.h" />
+    <ClInclude Include="DownloadDlg.h" />
+    <ClInclude Include="EditorOptionPage.h" />
+    <ClInclude Include="EditorOptionPage2.h" />
+    <ClInclude Include="FuncOptionPage.h" />
+    <ClInclude Include="FuncOptionPage2.h" />
+    <ClInclude Include="getsrc.h" />
+    <ClInclude Include="global.h" />
+    <ClInclude Include="GridOptionPage.h" />
+    <ClInclude Include="GridSortDlg.h" />
+    <ClInclude Include="GridView.h" />
+    <ClInclude Include="LineJumpDlg.h" />
+    <ClInclude Include="lintsql.h" />
+    <ClInclude Include="localsql.h" />
+    <ClInclude Include="LogEditData.h" />
+    <ClInclude Include="macro.h" />
+    <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="ObjectBar.h" />
+    <ClInclude Include="ObjectDetailBar.h" />
+    <ClInclude Include="OptionSheet.h" />
+    <ClInclude Include="pggriddata.h" />
+    <ClInclude Include="PrintDlg.h" />
+    <ClInclude Include="psqledit.h" />
+    <ClInclude Include="PSqlEditCtrl.h" />
+    <ClInclude Include="psqleditDoc.h" />
+    <ClInclude Include="psql_util.h" />
+    <ClInclude Include="QueryCloseDlg.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="scr_pass.h" />
+    <ClInclude Include="SetupPage.h" />
+    <ClInclude Include="ShortCutKeyDlg.h" />
+    <ClInclude Include="shortcutsql.h" />
+    <ClInclude Include="ShortCutSqlDlg.h" />
+    <ClInclude Include="ShortCutSqlListDlg.h" />
+    <ClInclude Include="sizecbar.h" />
+    <ClInclude Include="SQLEditView.h" />
+    <ClInclude Include="SQLExplainView.h" />
+    <ClInclude Include="SqlLibraryDlg.h" />
+    <ClInclude Include="SqlListMaker.h" />
+    <ClInclude Include="sqllog.h" />
+    <ClInclude Include="SqlLogDlg.h" />
+    <ClInclude Include="SqlLogFileDlg.h" />
+    <ClInclude Include="sqlparse.h" />
+    <ClInclude Include="sqlparser.h" />
+    <ClInclude Include="sqlstrtoken.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="TabBar.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\folder1.ico" />
+    <Image Include="res\icon1.ico" />
+    <Image Include="res\psqledit.ico" />
+    <Image Include="res\psqleditDoc.ico" />
+    <Image Include="res\sqltune.ico" />
+    <Image Include="res\sqltuneDoc.ico" />
+    <Image Include="res\Toolbar.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="res\psqledit.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="changelog.txt" />
+    <Text Include="doc\credits.txt" />
+    <Text Include="doc\LICENSE_BSD.txt" />
+    <Text Include="doc\LICENSE_CSizingControlBar.txt.txt" />
+    <Text Include="doc\LICENSE_MINISCHEME.txt" />
+    <Text Include="doc\LICENSE_PostgreSQL.txt" />
+    <Text Include="doc\LICENSE_TINYSCHEME.txt" />
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\pglib\pglib.vcxproj">
+      <Project>{83cb025b-f6b8-4f91-8424-622071b88ee1}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
