@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2025, Atsushi Ogawa
+ * All rights reserved.
+ *
+ * This software is licensed under the BSD License.
+ * See the LICENSE_BSD file for details.
+ */
+
 #ifndef _PLIG_PG_MSG_H_INCLUDE_
 #define _PLIG_PG_MSG_H_INCLUDE_
 
