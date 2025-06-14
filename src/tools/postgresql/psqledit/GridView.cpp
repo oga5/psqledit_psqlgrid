@@ -988,6 +988,8 @@ void CGridView::OnGrcolumnWidth()
 
 	if (selected_area == NULL) {
 		val.Format(_T("%d"), m_grid_ctrl.GetDispColWidth(col));
+	} else {
+		val.Format(_T("%d"), m_grid_ctrl.GetDispColWidth(selected_area->pos1.x));
 	}
 
 	dlg.CreateDlg(AfxGetMainWnd(), _T("列幅"), val);
