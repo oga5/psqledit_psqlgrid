@@ -36,3 +36,5 @@ HPgDataset get_object_properties(HPgSession ss, const TCHAR *type, const TCHAR *
 
 CString show_search_path(HPgSession ss, TCHAR *msg_buf);
 int set_search_path(HPgSession ss, const TCHAR *search_path, TCHAR *msg_buf);
+
+bool is_schema_in_search_path(HPgSession ss, const TCHAR* schema_name, TCHAR* msg_buf);

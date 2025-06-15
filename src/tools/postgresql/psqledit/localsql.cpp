@@ -73,6 +73,34 @@ static void get_search_path_array(HPgSession ss, const TCHAR *search_path, CStri
 	}
 }
 
+// 指定したschema_nameがsearch_pathに含まれるかチェックする
+bool is_schema_in_search_path(HPgSession ss, const TCHAR* schema_name, TCHAR* msg_buf)
+{
+	if(_tcscmp(schema_name, _T("pg_catalog")) == 0) {
+		// pg_catalogは常に参照可能
+		return true;
+	}
+
+	CString search_path = show_search_path(ss, msg_buf);
+	if (search_path.IsEmpty()) {
+		return false;
+	}
+
+	CStringArray schema_arr;
+	get_search_path_array(ss, search_path, schema_arr);
+
+	CString target_schema = schema_name;
+	target_schema.Trim(_T(" "));
+
+	for (int i = 0; i < schema_arr.GetCount(); ++i) {
+		CString sp_schema = schema_arr.GetAt(i);
+		if (sp_schema.Compare(target_schema) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
 // table名からschema名を取得
 CString get_table_schema_name(HPgSession ss, const TCHAR *table_name, TCHAR *msg_buf)
 {

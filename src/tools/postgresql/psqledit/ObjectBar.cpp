@@ -525,7 +525,6 @@ void CObjectBar::OnRClickListView()
 
 void CObjectBar::OnDblClkListView()
 {
-	CString		owner_name;
 	CString		table_name;
 	int			selected_row;
 
@@ -534,13 +533,21 @@ void CObjectBar::OnDblClkListView()
 
 	make_object_name(&table_name, m_list.GetItemText(selected_row, 0).GetBuffer(0),
 		g_option.text_editor.copy_lower_name);
-/*
-	if(g_ora_user.Compare(GetSelectedUser()) != 0 && GetSelectedUser().Compare("PUBLIC") != 0) {
-		make_object_name(&owner_name, GetSelectedUser().GetBuffer(0),
-			g_option.text_editor.copy_lower_name);
-		table_name = owner_name + "." + table_name;
+
+	int nspname_idx = GetColumnIdx(_T("nspname"));
+	if (nspname_idx >= 0) {
+		CString nspname = m_list.GetItemText(selected_row, nspname_idx);
+		if (!is_schema_in_search_path(g_ss, nspname, g_msg_buf)) {
+			CString		schema_name;
+
+			// スキーマが検索パスにない場合は、スキーマ名を付加する
+			if (nspname != _T("")) {
+				make_object_name(&schema_name, nspname.GetBuffer(0), g_option.text_editor.copy_lower_name);
+				table_name = schema_name + "." + table_name;
+			}
+		}
 	}
-*/
+
 	CDocument *pdoc = ::GetActiveDocument();
 	if(pdoc != NULL) {
 		pdoc->UpdateAllViews(NULL, UPD_PASTE_OBJECT_NAME, (CObject *)table_name.GetBuffer(0));
