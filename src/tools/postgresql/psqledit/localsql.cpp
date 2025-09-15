@@ -255,13 +255,15 @@ static HPgDataset get_object_list_common(HPgSession ss, const TCHAR *owner, cons
 	TCHAR	type_cond[1024] = _T("");
 	TCHAR	where_cond[1024] = _T("");
 
-	if(_tcscmp(type, _T("TABLE")) == 0) {
-		if(pg_get_remote_version(ss) >= 80100) {
+	if (_tcscmp(type, _T("TABLE")) == 0) {
+		if (pg_get_remote_version(ss) >= 80100) {
 			// pertition tableの親テーブル relkind=pを追加
 			_tcscpy(type_cond, _T("where ((c.relkind = 'r'::\"char\") or (c.relkind = 's'::\"char\") or (c.relkind = 'p'::\"char\")) "));
 		} else {
 			_tcscpy(type_cond, _T("where ((c.relkind = 'r'::\"char\") or (c.relkind = 's'::\"char\")) "));
 		}
+	} else if (_tcscmp(type, _T("TABLE|VIEW")) == 0) {
+		_tcscpy(type_cond, _T("where ((c.relkind = 'r'::\"char\") or (c.relkind = 's'::\"char\") or (c.relkind = 'p'::\"char\") or (c.relkind = 'v'::\"char\")) "));
 	} else if(_tcscmp(type, _T("FOREIGN TABLE")) == 0) {
 		_tcscpy(type_cond, _T("where (c.relkind = 'f'::\"char\") "));
 	} else if(_tcscmp(type, _T("VIEW")) == 0) {
@@ -310,7 +312,7 @@ static HPgDataset get_object_list_common(HPgSession ss, const TCHAR *owner, cons
 		_stprintf(sql_buf,
 			_T("select c.relname as name, n.nspname,  \n")
 			_T("	pg_get_userbyid(c.relowner) as owner,  \n")
-			_T("	d.description as comment, c.oid \n")
+			_T("	d.description as comment, c.oid, c.relkind \n")
 			_T("from pg_class c, pg_namespace n, pg_description d \n")
 			_T("%s \n")
 			_T("and c.relnamespace = n.oid \n")
@@ -319,7 +321,7 @@ static HPgDataset get_object_list_common(HPgSession ss, const TCHAR *owner, cons
 			_T("union \n")
 			_T("select c.relname as name, n.nspname,  \n")
 			_T("	pg_get_userbyid(c.relowner) as owner,  \n")
-			_T("	null::text as comment, c.oid \n")
+			_T("	null::text as comment, c.oid, c.relkind \n")
 			_T("from pg_class c, pg_namespace n \n")
 			_T("%s \n")
 			_T("and c.relnamespace = n.oid \n")
@@ -332,7 +334,7 @@ static HPgDataset get_object_list_common(HPgSession ss, const TCHAR *owner, cons
 		_stprintf(sql_buf,
 			_T("select c.relname as name, ''::\"char\" as nspname, \n")
 			_T("	pg_get_userbyid(c.relowner) as owner,  \n")
-			_T("	d.description as comment, c.oid \n")
+			_T("	d.description as comment, c.oid, c.relkind \n")
 			_T("from pg_class c, pg_description d \n")
 			_T("%s \n")
 			_T("and c.oid = d.objoid \n")
@@ -340,7 +342,7 @@ static HPgDataset get_object_list_common(HPgSession ss, const TCHAR *owner, cons
 			_T("union \n")
 			_T("select c.relname as name, ''::\"char\" as nspname, \n")
 			_T("	pg_get_userbyid(c.relowner) as owner,  \n")
-			_T("	null::text as comment, c.oid \n")
+			_T("	null::text as comment, c.oid, c.relkind \n")
 			_T("from pg_class c \n")
 			_T("%s \n")
 			_T("and not exists(select objoid from pg_description d \n")
@@ -351,14 +353,14 @@ static HPgDataset get_object_list_common(HPgSession ss, const TCHAR *owner, cons
 		_stprintf(sql_buf,
 			_T("select c.relname as name, ''::\"char\" as nspname, \n")
 			_T("	pg_get_userbyid(c.relowner) as owner,  \n")
-			_T("	d.description as comment, c.oid \n")
+			_T("	d.description as comment, c.oid, c.relkind \n")
 			_T("from pg_class c, pg_description d \n")
 			_T("%s \n")
 			_T("and c.oid = d.objoid \n")
 			_T("union \n")
 			_T("select c.relname as name, ''::\"char\" as nspname, \n")
 			_T("	pg_get_userbyid(c.relowner) as owner,  \n")
-			_T("	null::text as comment, c.oid \n")
+			_T("	null::text as comment, c.oid, c.relkind \n")
 			_T("from pg_class c \n")
 			_T("%s \n")
 			_T("and not exists(select objoid from pg_description d \n")
@@ -596,7 +598,8 @@ static HPgDataset get_object_list_type(HPgSession ss, const TCHAR *owner, const 
 HPgDataset get_object_list(HPgSession ss, const TCHAR *owner, const TCHAR *type, TCHAR *msg_buf)
 {
 	if(_tcscmp(type, _T("TABLE")) == 0 || _tcscmp(type, _T("VIEW")) == 0 || 
-			_tcscmp(type, _T("MATERIALIZED VIEW")) == 0 || _tcscmp(type, _T("SEQUENCE")) == 0) {
+			_tcscmp(type, _T("MATERIALIZED VIEW")) == 0 || _tcscmp(type, _T("SEQUENCE")) == 0 ||
+			_tcscmp(type, _T("TABLE|VIEW")) == 0) {
 		return get_object_list_common(ss, owner, type, msg_buf);
 	}
 	if(_tcscmp(type, _T("FOREIGN TABLE")) == 0) {

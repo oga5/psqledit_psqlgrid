@@ -42,6 +42,7 @@ static const struct {
 	int			idx;
 } object_type_list[] = {
 	{ _T("TABLE"), 0 },
+	{ _T("TABLE|VIEW"), 10 },
 	{ _T("FOREIGN TABLE"), 9 },
 	{ _T("INDEX"), 1 },
 	{ _T("VIEW"), 2 },
@@ -202,6 +203,26 @@ CString CObjectBar::GetSelectedUser()
 	return owner;
 }
 
+CString CObjectBar::GetSelectedType2(int selected_row)
+{
+	CString type = GetSelectedType();
+
+	if (type.Compare(_T("TABLE|VIEW")) == 0) {
+		int selected_row = m_list.GetNextItem(-1, LVNI_SELECTED | LVNI_ALL);
+		CString relkind = _T("");
+		if (selected_row >= 0) {
+			relkind = m_list.GetItemText(selected_row, GetColumnIdx(_T("relkind")));
+		}
+		if (relkind.Compare(_T("v")) == 0) {
+			type = _T("VIEW");
+		} else {
+			type = _T("TABLE");
+		}
+	}
+
+	return type;
+}
+
 CString CObjectBar::GetSelectedType()
 {
 	CString type;
@@ -242,6 +263,10 @@ int CObjectBar::GetColumnIdx(const TCHAR* colname)
 	return -1;
 }
 
+int CObjectBar::GetSelectedRow()
+{
+	return m_list.GetNextItem(-1, LVNI_SELECTED | LVNI_ALL);
+}
 
 CString CObjectBar::GetSelectedData(const TCHAR *colname)
 {
@@ -282,7 +307,7 @@ int CObjectBar::GetSelectedObjectList(CStringArray* object_name_list, CStringArr
 		CString object_name = m_list.GetItemText(selected_row, 0);
 		object_name_list->Add(object_name);
 
-		CString object_type = GetSelectedType();
+		CString object_type = GetSelectedType2(selected_row);
 		object_type_list->Add(object_type);
 
 		CString oid = m_list.GetItemText(selected_row, oid_idx);
@@ -453,8 +478,10 @@ void CObjectBar::OnListViewItemChanged(NM_LISTVIEW *p_nmhdr)
 		CWaitCursor wait_cursor;
 		CString object_name;
 
+		int selected_row = GetSelectedRow();
+
 		g_object_detail_bar.SetObjectData(GetSelectedUser(), GetSelectedObject(),
-			GetSelectedOid(), GetSelectedSchema(), GetSelectedType());
+			GetSelectedOid(), GetSelectedSchema(), GetSelectedType2(selected_row));
 	} else {
 		g_object_detail_bar.ClearColumnList();
 	}
@@ -490,6 +517,9 @@ void CObjectBar::OnRClickListView()
 	menu.AppendMenu(MF_STRING, ID_MAKE_SELECT_SQL_ALL, _T("Select文作成"));
 	menu.AppendMenu(MF_STRING, ID_MAKE_INSERT_SQL_ALL, _T("Insert文作成"));
 
+	int selected_row = GetSelectedRow();
+	CString selected_type = GetSelectedType2(selected_row);
+
 	if(g_login_flg == FALSE) {
 		menu.EnableMenuItem(ID_GET_OBJECT_SOURCE, MF_GRAYED);
 		menu.EnableMenuItem(ID_MAKE_SELECT_SQL_ALL, MF_GRAYED);
@@ -498,16 +528,16 @@ void CObjectBar::OnRClickListView()
 		if(!CanGetSource()) {
 			menu.EnableMenuItem(ID_GET_OBJECT_SOURCE, MF_GRAYED);
 		}
-		if((GetSelectedType() != _T("TABLE") &&
-			GetSelectedType() != _T("FOREIGN TABLE") &&
-			GetSelectedType() != _T("VIEW") &&
-			GetSelectedType() != _T("MATERIALIZED VIEW")) ||
+		if((selected_type != _T("TABLE") &&
+			selected_type != _T("FOREIGN TABLE") &&
+			selected_type != _T("VIEW") &&
+			selected_type != _T("MATERIALIZED VIEW")) ||
 			selected_item_cnt != 1) {
 			menu.EnableMenuItem(ID_MAKE_SELECT_SQL_ALL, MF_GRAYED);
 			menu.EnableMenuItem(ID_MAKE_INSERT_SQL_ALL, MF_GRAYED);
 		}
 
-		if((GetSelectedType() == _T("TABLE")) &&
+		if((selected_type == _T("TABLE")) &&
 			GetSelectedSchema() != _T("pg_catalog") &&
 			GetSelectedSchema() != _T("information_schema") &&
 			selected_item_cnt == 1) {
@@ -921,7 +951,8 @@ BOOL CObjectBar::CanGetSource()
 		obj_type == "MATERIALIZED VIEW" ||
 		obj_type == "TYPE" ||
 		obj_type == "INDEX" ||
-		obj_type == "TABLE") {
+		obj_type == "TABLE" ||
+		obj_type == "TABLE|VIEW") {
 		return TRUE;
 	} else {
 		return FALSE;

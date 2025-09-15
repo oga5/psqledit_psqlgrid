@@ -69,6 +69,9 @@ private:
 
 	CString GetSelectedData(const TCHAR *colname);
 
+	int GetSelectedRow();
+	CString GetSelectedType2(int selected_row);
+
 public:
 	int InitializeList(const TCHAR *user_name);
 	void FreeObjectList();
