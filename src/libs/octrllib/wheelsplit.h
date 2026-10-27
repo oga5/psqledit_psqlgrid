@@ -41,6 +41,8 @@ public:
 	virtual void DeleteRow( int rowDelete );
 	virtual void DeleteColumn( int colDelete );
 
+	virtual BOOL CreateScrollBarCtrl(DWORD dwStyle, UINT nID);
+
 	void SetWheelMode(int mode) { m_wheel_mode = mode; }
 
 protected:

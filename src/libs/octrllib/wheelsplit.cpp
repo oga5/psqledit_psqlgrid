@@ -13,6 +13,136 @@
 #include "wheelsplit.h"
 #include "octrl_msg.h"
 
+#include <windowsx.h>
+#include <uxtheme.h>
+#pragma comment(lib, "uxtheme.lib")
+
+/////////////////////////////////////////////////////////////////////////////
+// Windows 8以降、テーマが適用されない(クラシックな)スクロールバーコントロールでは、
+// 両端の矢印ボタンのグリフがボタンの大きさよりも小さく描画される。
+// 分割ウィンドウでは子ウィンドウのスクロールバーを使うため、各スクロールバーを
+// サブクラス化して、矢印をボタンの大きさに合わせて描き直す。
+
+struct CSBArrowFix {
+	WNDPROC	old_proc;
+	int		pressed_button;	// 0: 押されていない, 1: 上または左, 2: 下または右
+};
+
+// 矢印ボタンの矩形を取得する
+//   button: 1 = 上または左, 2 = 下または右
+static void GetSBArrowRect(HWND hWnd, int button, RECT *rect)
+{
+	DWORD	style = ::GetWindowLong(hWnd, GWL_STYLE);
+	RECT	rc_client;
+	::GetClientRect(hWnd, &rc_client);
+
+	if((style & SBS_VERT) != 0) {
+		int		w = rc_client.right - rc_client.left;
+		if(button == 1) ::SetRect(rect, 0, 0, w, w);
+		else ::SetRect(rect, 0, rc_client.bottom - w, w, rc_client.bottom);
+	} else {
+		int		h = rc_client.bottom - rc_client.top;
+		if(button == 1) ::SetRect(rect, 0, 0, h, h);
+		else ::SetRect(rect, rc_client.right - h, 0, rc_client.right, h);
+	}
+}
+
+static int SBArrowHitTest(HWND hWnd, POINT point)
+{
+	for(int i = 1; i <= 2; i++) {
+		RECT	rect;
+		GetSBArrowRect(hWnd, i, &rect);
+		if(::PtInRect(&rect, point)) return i;
+	}
+	return 0;
+}
+
+static void DrawSBArrowButton(HWND hWnd, HDC hDC, const RECT *rect,
+	TCHAR glyph, BOOL pressed)
+{
+	::FillRect(hDC, rect, ::GetSysColorBrush(COLOR_BTNFACE));
+
+	RECT	rc = *rect;
+	::DrawEdge(hDC, &rc, pressed ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT);
+
+	// Marlettフォントのスクロールバー用グリフ:
+	//   '5' = 上向き, '6' = 下向き, '3' = 左向き, '4' = 右向き
+	int		size = rc.bottom - rc.top;
+	HFONT	hFont = ::CreateFont(-size - 2, 0, 0, 0, FW_NORMAL, 0, 0, 0,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY, FF_DONTCARE, _T("Marlett"));
+	if(hFont == NULL) return;
+
+	HFONT	hFontOld = (HFONT)::SelectObject(hDC, hFont);
+	::SetBkMode(hDC, TRANSPARENT);
+	::SetTextColor(hDC, ::GetSysColor(
+		::IsWindowEnabled(hWnd) ? COLOR_BTNTEXT : COLOR_GRAYTEXT));
+	if(pressed) ::OffsetRect(&rc, 1, 1);
+	::DrawText(hDC, &glyph, 1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	::SelectObject(hDC, hFontOld);
+	::DeleteObject(hFont);
+}
+
+static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
+{
+	// テーマが有効な場合はOS標準の描画をそのまま使う
+	if(::GetWindowTheme(hWnd) != NULL) return;
+
+	DWORD	style = ::GetWindowLong(hWnd, GWL_STYLE);
+	if((style & (SBS_SIZEBOX | SBS_SIZEGRIP)) != 0) return;
+
+	HDC	hDC = ::GetDC(hWnd);
+	if(hDC == NULL) return;
+
+	// キャプチャ中にカーソルがボタンの外に出た場合は、押下表示を解除する
+	POINT	point;
+	::GetCursorPos(&point);
+	::ScreenToClient(hWnd, &point);
+
+	BOOL	vert = (style & SBS_VERT) != 0;
+	TCHAR	glyphs[2] = { vert ? _T('5') : _T('3'), vert ? _T('6') : _T('4') };
+	for(int i = 0; i < 2; i++) {
+		RECT	rect;
+		GetSBArrowRect(hWnd, i + 1, &rect);
+		BOOL	pressed = fix != NULL && fix->pressed_button == i + 1 &&
+			::GetCapture() == hWnd && ::PtInRect(&rect, point);
+		DrawSBArrowButton(hWnd, hDC, &rect, glyphs[i], pressed);
+	}
+
+	::ReleaseDC(hWnd, hDC);
+}
+
+static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
+	WPARAM wParam, LPARAM lParam)
+{
+	CSBArrowFix	*fix = (CSBArrowFix *)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	if(fix == NULL) return ::DefWindowProc(hWnd, msg, wParam, lParam);
+
+	LRESULT	result = ::CallWindowProc(fix->old_proc, hWnd, msg, wParam, lParam);
+
+	switch(msg) {
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONDBLCLK: {
+		POINT	point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		fix->pressed_button = SBArrowHitTest(hWnd, point);
+		break; }
+	case WM_LBUTTONUP:
+	case WM_CANCELMODE:
+	case WM_CAPTURECHANGED:
+		fix->pressed_button = 0;
+		break;
+	case WM_NCDESTROY:
+		delete fix;
+		::SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
+		return result;
+	}
+
+	// 矢印ボタンを描き直す
+	RedrawSBArrows(hWnd, fix);
+
+	return result;
+}
+
 IMPLEMENT_DYNCREATE(CWheelSplitterWnd, CSplitterWnd)
 
 BEGIN_MESSAGE_MAP(CWheelSplitterWnd, CSplitterWnd)
@@ -196,4 +326,24 @@ void CWheelSplitterWnd::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBa
 	if(row < 0 && row >= m_nMaxRows) return;
 
 	CSplitterWnd::OnVScroll(nSBCode, nPos, pScrollBar);
+}
+
+BOOL CWheelSplitterWnd::CreateScrollBarCtrl(DWORD dwStyle, UINT nID)
+{
+	if(!CSplitterWnd::CreateScrollBarCtrl(dwStyle, nID)) return FALSE;
+
+	// クラシックなスクロールバーコントロールの矢印ボタンを描き直すため
+	// サブクラスを設定する(サイズボックスは対象外)
+	if((dwStyle & (SBS_SIZEBOX | SBS_SIZEGRIP)) == 0) {
+		HWND	hScrollBar = ::GetDlgItem(m_hWnd, nID);
+		if(hScrollBar != NULL) {
+			CSBArrowFix	*fix = new CSBArrowFix;
+			fix->pressed_button = 0;
+			fix->old_proc = (WNDPROC)::SetWindowLongPtr(hScrollBar,
+				GWLP_WNDPROC, (LONG_PTR)SBArrowFixWndProc);
+			::SetWindowLongPtr(hScrollBar, GWLP_USERDATA, (LONG_PTR)fix);
+		}
+	}
+
+	return TRUE;
 }
