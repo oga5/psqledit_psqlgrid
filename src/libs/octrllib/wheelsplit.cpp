@@ -24,8 +24,9 @@
 // サブクラス化して、矢印ボタンをスクロールバーの大きさに合わせて描き直す。
 
 struct CSBArrowFix {
-	WNDPROC	old_proc;
-	int		pressed_button;	// 0: 押されていない, 1: 上または左, 2: 下または右
+	WNDPROC		old_proc;
+	int			pressed_button;	// 0: 押されていない, 1: 上または左, 2: 下または右
+	DWORDLONG	draw_sig;		// 最後に描画したときの状態
 };
 
 // 矢印ボタンの矩形を取得する
@@ -75,15 +76,24 @@ static void DrawSBArrowButton(HWND hWnd, HDC hDC, const RECT *rect,
 
 	HFONT	hFontOld = (HFONT)::SelectObject(hDC, hFont);
 	::SetBkMode(hDC, TRANSPARENT);
-	::SetTextColor(hDC, ::GetSysColor(
-		(disabled || !::IsWindowEnabled(hWnd)) ? COLOR_GRAYTEXT : COLOR_BTNTEXT));
+	if(disabled || !::IsWindowEnabled(hWnd)) {
+		// クラシックな無効ボタンと同じエンボス表示にする
+		RECT	rc_hi = rc;
+		::OffsetRect(&rc_hi, 1, 1);
+		::SetTextColor(hDC, ::GetSysColor(COLOR_3DHILIGHT));
+		::DrawText(hDC, &glyph, 1, &rc_hi,
+			DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		::SetTextColor(hDC, ::GetSysColor(COLOR_GRAYTEXT));
+	} else {
+		::SetTextColor(hDC, ::GetSysColor(COLOR_BTNTEXT));
+	}
 	if(pressed) ::OffsetRect(&rc, 1, 1);
 	::DrawText(hDC, &glyph, 1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	::SelectObject(hDC, hFontOld);
 	::DeleteObject(hFont);
 }
 
-static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
+static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix, BOOL force_redraw)
 {
 	// テーマが有効な場合はOS標準の描画をそのまま使う
 	if(::GetWindowTheme(hWnd) != NULL) return;
@@ -98,9 +108,6 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
 	sbi.cbSize = sizeof(sbi);
 	BOOL	have_sbi = ::GetScrollBarInfo(hWnd, OBJID_CLIENT, &sbi);
 
-	HDC	hDC = ::GetDC(hWnd);
-	if(hDC == NULL) return;
-
 	// キャプチャ中にカーソルがボタンの外に出た場合は、押下表示を解除する
 	POINT	point;
 	::GetCursorPos(&point);
@@ -109,42 +116,63 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
 	RECT	rc_client;
 	::GetClientRect(hWnd, &rc_client);
 
+	BOOL	disabled[2], pressed[2];
+	for(int i = 0; i < 2; i++) {
+		RECT	rect;
+		GetSBArrowRect(hWnd, i + 1, &rect);
+		int		state_idx = (i == 0) ? 1 : 5;
+		disabled[i] = have_sbi &&
+			(sbi.rgstate[state_idx] & STATE_SYSTEM_UNAVAILABLE) != 0;
+		pressed[i] = !disabled[i] &&
+			((have_sbi && (sbi.rgstate[state_idx] & STATE_SYSTEM_PRESSED) != 0) ||
+			(fix != NULL && fix->pressed_button == i + 1 &&
+			::GetCapture() == hWnd && ::PtInRect(&rect, point)));
+	}
+
+	// 描画内容が前回と同じ場合は描き直しを省略する
+	// (WM_PAINTなどOS側の再描画が絡む場合はforce_redrawで必ず描き直す)
+	DWORDLONG	sig = (DWORDLONG)::IsWindowEnabled(hWnd)
+		| ((DWORDLONG)disabled[0] << 1) | ((DWORDLONG)disabled[1] << 2)
+		| ((DWORDLONG)pressed[0] << 3) | ((DWORDLONG)pressed[1] << 4)
+		| ((DWORDLONG)(style & 0xffff) << 16)
+		| ((DWORDLONG)rc_client.right << 32)
+		| ((DWORDLONG)rc_client.bottom << 48);
+	if(!force_redraw && fix != NULL && fix->draw_sig == sig) return;
+	if(fix != NULL) fix->draw_sig = sig;
+
+	HDC	hDC = ::GetDC(hWnd);
+	if(hDC == NULL) return;
+
 	BOOL	vert = (style & SBS_VERT) != 0;
 	TCHAR	glyphs[2] = { vert ? _T('5') : _T('3'), vert ? _T('6') : _T('4') };
 	for(int i = 0; i < 2; i++) {
 		RECT	rect;
 		GetSBArrowRect(hWnd, i + 1, &rect);
-		int		state_idx = (i == 0) ? 1 : 5;
-		BOOL	disabled = have_sbi &&
-			(sbi.rgstate[state_idx] & STATE_SYSTEM_UNAVAILABLE) != 0;
-		BOOL	pressed = !disabled &&
-			((have_sbi && (sbi.rgstate[state_idx] & STATE_SYSTEM_PRESSED) != 0) ||
-			(fix != NULL && fix->pressed_button == i + 1 &&
-			::GetCapture() == hWnd && ::PtInRect(&rect, point)));
-		DrawSBArrowButton(hWnd, hDC, &rect, glyphs[i], pressed, disabled);
+		DrawSBArrowButton(hWnd, hDC, &rect, glyphs[i], pressed[i], disabled[i]);
 	}
 
 	// OSが描いた矢印ボタンが実際のボタンサイズより大きい場合、はみ出した
 	// 部分の描画が残るので、溝と同じ色で消去する
-	// (dxyLineButtonはOSが使う矢印ボタンの幅または高さ)
-	if(have_sbi) {
-		HBRUSH	br = ::GetSysColorBrush(COLOR_SCROLLBAR);
-		RECT	rc;
-		if(vert) {
-			int	w = rc_client.right - rc_client.left;
-			::SetRect(&rc, 0, w, rc_client.right, sbi.dxyLineButton);
-			if(rc.bottom > rc.top) ::FillRect(hDC, &rc, br);
-			::SetRect(&rc, 0, rc_client.bottom - sbi.dxyLineButton,
-				rc_client.right, rc_client.bottom - w);
-			if(rc.bottom > rc.top) ::FillRect(hDC, &rc, br);
-		} else {
-			int	h = rc_client.bottom - rc_client.top;
-			::SetRect(&rc, h, 0, sbi.dxyLineButton, rc_client.bottom);
-			if(rc.right > rc.left) ::FillRect(hDC, &rc, br);
-			::SetRect(&rc, rc_client.right - sbi.dxyLineButton, 0,
-				rc_client.right - h, rc_client.bottom);
-			if(rc.right > rc.left) ::FillRect(hDC, &rc, br);
-		}
+	// (os_btnはOSが使う矢印ボタンの幅または高さ)
+	int		os_btn = have_sbi ? sbi.dxyLineButton :
+		(vert ? ::GetSystemMetrics(SM_CYVSCROLL) :
+		::GetSystemMetrics(SM_CXVSCROLL));
+	HBRUSH	br = ::GetSysColorBrush(COLOR_SCROLLBAR);
+	RECT	rc;
+	if(vert) {
+		int	w = rc_client.right - rc_client.left;
+		::SetRect(&rc, 0, w, rc_client.right, os_btn);
+		if(rc.bottom > rc.top) ::FillRect(hDC, &rc, br);
+		::SetRect(&rc, 0, rc_client.bottom - os_btn, rc_client.right,
+			rc_client.bottom - w);
+		if(rc.bottom > rc.top) ::FillRect(hDC, &rc, br);
+	} else {
+		int	h = rc_client.bottom - rc_client.top;
+		::SetRect(&rc, h, 0, os_btn, rc_client.bottom);
+		if(rc.right > rc.left) ::FillRect(hDC, &rc, br);
+		::SetRect(&rc, rc_client.right - os_btn, 0, rc_client.right - h,
+			rc_client.bottom);
+		if(rc.right > rc.left) ::FillRect(hDC, &rc, br);
 	}
 
 	::ReleaseDC(hWnd, hDC);
@@ -158,6 +186,7 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 
 	LRESULT	result = ::CallWindowProc(fix->old_proc, hWnd, msg, wParam, lParam);
 
+	BOOL	force_redraw = FALSE;
 	switch(msg) {
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONDBLCLK: {
@@ -173,10 +202,21 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 		delete fix;
 		::SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
 		return result;
+	// OS側の再描画で矢印ボタンが元に戻る可能性があるメッセージでは
+	// 強制的に描き直す
+	case WM_PAINT:
+	case WM_SIZE:
+	case WM_SHOWWINDOW:
+	case WM_ENABLE:
+	case WM_STYLECHANGED:
+	case WM_THEMECHANGED:
+	case WM_SYSCOLORCHANGE:
+		force_redraw = TRUE;
+		break;
 	}
 
 	// 矢印ボタンを描き直す
-	RedrawSBArrows(hWnd, fix);
+	RedrawSBArrows(hWnd, fix, force_redraw);
 
 	return result;
 }
@@ -377,6 +417,7 @@ BOOL CWheelSplitterWnd::CreateScrollBarCtrl(DWORD dwStyle, UINT nID)
 		if(hScrollBar != NULL) {
 			CSBArrowFix	*fix = new CSBArrowFix;
 			fix->pressed_button = 0;
+			fix->draw_sig = (DWORDLONG)-1;
 			fix->old_proc = (WNDPROC)::SetWindowLongPtr(hScrollBar,
 				GWLP_WNDPROC, (LONG_PTR)SBArrowFixWndProc);
 			::SetWindowLongPtr(hScrollBar, GWLP_USERDATA, (LONG_PTR)fix);
