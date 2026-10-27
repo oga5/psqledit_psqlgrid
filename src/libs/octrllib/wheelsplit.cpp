@@ -19,9 +19,9 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // Windows 8以降、テーマが適用されない(クラシックな)スクロールバーコントロールでは、
-// 両端の矢印ボタンのグリフがボタンの大きさよりも小さく描画される。
+// 両端の矢印ボタンとそのグリフがスクロールバーの大きさと一致しない。
 // 分割ウィンドウでは子ウィンドウのスクロールバーを使うため、各スクロールバーを
-// サブクラス化して、矢印をボタンの大きさに合わせて描き直す。
+// サブクラス化して、矢印ボタンをスクロールバーの大きさに合わせて描き直す。
 
 struct CSBArrowFix {
 	WNDPROC	old_proc;
@@ -58,7 +58,7 @@ static int SBArrowHitTest(HWND hWnd, POINT point)
 }
 
 static void DrawSBArrowButton(HWND hWnd, HDC hDC, const RECT *rect,
-	TCHAR glyph, BOOL pressed)
+	TCHAR glyph, BOOL pressed, BOOL disabled)
 {
 	::FillRect(hDC, rect, ::GetSysColorBrush(COLOR_BTNFACE));
 
@@ -76,7 +76,7 @@ static void DrawSBArrowButton(HWND hWnd, HDC hDC, const RECT *rect,
 	HFONT	hFontOld = (HFONT)::SelectObject(hDC, hFont);
 	::SetBkMode(hDC, TRANSPARENT);
 	::SetTextColor(hDC, ::GetSysColor(
-		::IsWindowEnabled(hWnd) ? COLOR_BTNTEXT : COLOR_GRAYTEXT));
+		(disabled || !::IsWindowEnabled(hWnd)) ? COLOR_GRAYTEXT : COLOR_BTNTEXT));
 	if(pressed) ::OffsetRect(&rc, 1, 1);
 	::DrawText(hDC, &glyph, 1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	::SelectObject(hDC, hFontOld);
@@ -91,6 +91,13 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
 	DWORD	style = ::GetWindowLong(hWnd, GWL_STYLE);
 	if((style & (SBS_SIZEBOX | SBS_SIZEGRIP)) != 0) return;
 
+	// 矢印ボタンごとの状態を取得する
+	// SCROLLBARINFO.rgstate: 0 = バー全体, 1 = 上または左の矢印ボタン,
+	//   2～4 = ページ領域とつまみ, 5 = 下または右の矢印ボタン
+	SCROLLBARINFO	sbi;
+	sbi.cbSize = sizeof(sbi);
+	BOOL	have_sbi = ::GetScrollBarInfo(hWnd, OBJID_CLIENT, &sbi);
+
 	HDC	hDC = ::GetDC(hWnd);
 	if(hDC == NULL) return;
 
@@ -99,14 +106,45 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
 	::GetCursorPos(&point);
 	::ScreenToClient(hWnd, &point);
 
+	RECT	rc_client;
+	::GetClientRect(hWnd, &rc_client);
+
 	BOOL	vert = (style & SBS_VERT) != 0;
 	TCHAR	glyphs[2] = { vert ? _T('5') : _T('3'), vert ? _T('6') : _T('4') };
 	for(int i = 0; i < 2; i++) {
 		RECT	rect;
 		GetSBArrowRect(hWnd, i + 1, &rect);
-		BOOL	pressed = fix != NULL && fix->pressed_button == i + 1 &&
-			::GetCapture() == hWnd && ::PtInRect(&rect, point);
-		DrawSBArrowButton(hWnd, hDC, &rect, glyphs[i], pressed);
+		int		state_idx = (i == 0) ? 1 : 5;
+		BOOL	disabled = have_sbi &&
+			(sbi.rgstate[state_idx] & STATE_SYSTEM_UNAVAILABLE) != 0;
+		BOOL	pressed = !disabled &&
+			((have_sbi && (sbi.rgstate[state_idx] & STATE_SYSTEM_PRESSED) != 0) ||
+			(fix != NULL && fix->pressed_button == i + 1 &&
+			::GetCapture() == hWnd && ::PtInRect(&rect, point)));
+		DrawSBArrowButton(hWnd, hDC, &rect, glyphs[i], pressed, disabled);
+	}
+
+	// OSが描いた矢印ボタンが実際のボタンサイズより大きい場合、はみ出した
+	// 部分の描画が残るので、溝と同じ色で消去する
+	// (dxyLineButtonはOSが使う矢印ボタンの幅または高さ)
+	if(have_sbi) {
+		HBRUSH	br = ::GetSysColorBrush(COLOR_SCROLLBAR);
+		RECT	rc;
+		if(vert) {
+			int	w = rc_client.right - rc_client.left;
+			::SetRect(&rc, 0, w, rc_client.right, sbi.dxyLineButton);
+			if(rc.bottom > rc.top) ::FillRect(hDC, &rc, br);
+			::SetRect(&rc, 0, rc_client.bottom - sbi.dxyLineButton,
+				rc_client.right, rc_client.bottom - w);
+			if(rc.bottom > rc.top) ::FillRect(hDC, &rc, br);
+		} else {
+			int	h = rc_client.bottom - rc_client.top;
+			::SetRect(&rc, h, 0, sbi.dxyLineButton, rc_client.bottom);
+			if(rc.right > rc.left) ::FillRect(hDC, &rc, br);
+			::SetRect(&rc, rc_client.right - sbi.dxyLineButton, 0,
+				rc_client.right - h, rc_client.bottom);
+			if(rc.right > rc.left) ::FillRect(hDC, &rc, br);
+		}
 	}
 
 	::ReleaseDC(hWnd, hDC);
