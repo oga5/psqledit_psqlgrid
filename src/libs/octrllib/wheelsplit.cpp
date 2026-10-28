@@ -26,6 +26,7 @@
 struct CSBArrowFix {
 	WNDPROC	old_proc;
 	int		pressed_button;	// 0: 押されていない, 1: 上または左, 2: 下または右
+	DWORD	last_sig;		// 前回描画時の状態(再描画が必要かの判定用)
 };
 
 // 矢印ボタンの矩形を取得する
@@ -139,11 +140,31 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
 
 	BOOL	vert = (style & SBS_VERT) != 0;
 	TCHAR	glyphs[2] = { vert ? _T('5') : _T('3'), vert ? _T('6') : _T('4') };
+
+	// ちらつきを抑えるため、ボタンはオフスクリーンで描いてから転送する
+	HDC	hMemDC = ::CreateCompatibleDC(hDC);
 	for(int i = 0; i < 2; i++) {
 		RECT	rect;
 		GetSBArrowRect(hWnd, i + 1, &rect);
-		DrawSBArrowButton(hWnd, hDC, &rect, glyphs[i], pressed[i], disabled[i]);
+		int		w = rect.right - rect.left;
+		int		h = rect.bottom - rect.top;
+		if(w <= 0 || h <= 0) continue;
+		HBITMAP	hBmp =
+			(hMemDC != NULL) ? ::CreateCompatibleBitmap(hDC, w, h) : NULL;
+		if(hBmp == NULL) {
+			DrawSBArrowButton(hWnd, hDC, &rect, glyphs[i],
+				pressed[i], disabled[i]);
+			continue;
+		}
+		HBITMAP	hBmpOld = (HBITMAP)::SelectObject(hMemDC, hBmp);
+		RECT	rc_local = { 0, 0, w, h };
+		DrawSBArrowButton(hWnd, hMemDC, &rc_local, glyphs[i],
+			pressed[i], disabled[i]);
+		::BitBlt(hDC, rect.left, rect.top, w, h, hMemDC, 0, 0, SRCCOPY);
+		::SelectObject(hMemDC, hBmpOld);
+		::DeleteObject(hBmp);
 	}
+	if(hMemDC != NULL) ::DeleteDC(hMemDC);
 
 	// OSが描いた矢印ボタンが実際のボタンサイズより大きい場合、はみ出した
 	// 部分の描画が残るので、溝と同じ色で消去する
@@ -172,6 +193,64 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
 	::ReleaseDC(hWnd, hDC);
 }
 
+// 再描画の要否を判定するため、表示に関わる状態をまとめて取得する
+static DWORD SBArrowSignature(HWND hWnd)
+{
+	DWORD	sig = (DWORD)::GetWindowLong(hWnd, GWL_STYLE);
+
+	RECT	rc_client;
+	::GetClientRect(hWnd, &rc_client);
+	sig ^= (DWORD)rc_client.right ^ ((DWORD)rc_client.bottom << 16);
+
+	if(!::IsWindowEnabled(hWnd)) sig ^= 0x40000000;
+
+	SCROLLBARINFO	sbi;
+	sbi.cbSize = sizeof(sbi);
+	if(::GetScrollBarInfo(hWnd, OBJID_CLIENT, &sbi)) {
+		sig ^= (sbi.rgstate[1] &
+			(STATE_SYSTEM_UNAVAILABLE | STATE_SYSTEM_PRESSED))
+			^ ((sbi.rgstate[5] &
+			(STATE_SYSTEM_UNAVAILABLE | STATE_SYSTEM_PRESSED)) << 4)
+			^ ((DWORD)sbi.dxyLineButton << 8);
+	}
+
+	return sig;
+}
+
+// OSが矢印ボタンを描き直す可能性のあるメッセージかを判定する
+static BOOL SBMessageMayRedraw(UINT msg, const CSBArrowFix *fix)
+{
+	switch(msg) {
+	case WM_PAINT:
+	case WM_ERASEBKGND:
+	case WM_TIMER:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_LBUTTONDBLCLK:
+	case WM_CAPTURECHANGED:
+	case WM_CANCELMODE:
+	case WM_ENABLE:
+	case WM_SETFOCUS:
+	case WM_KILLFOCUS:
+	case WM_SIZE:
+	case WM_WINDOWPOSCHANGED:
+	case WM_SHOWWINDOW:
+	case WM_STYLECHANGED:
+	case WM_SYSCOLORCHANGE:
+	case WM_SETREDRAW:
+	case SBM_SETPOS:
+	case SBM_SETRANGE:
+	case SBM_SETRANGEREDRAW:
+	case SBM_SETSCROLLINFO:
+	case SBM_ENABLE_ARROWS:
+		return TRUE;
+	case WM_MOUSEMOVE:
+		// ボタン押下中のカーソル移動はOSが押下表示を更新する可能性がある
+		return fix != NULL && fix->pressed_button != 0;
+	}
+	return FALSE;
+}
+
 static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 	WPARAM wParam, LPARAM lParam)
 {
@@ -198,9 +277,13 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 	}
 
 	// 矢印ボタンを描き直す。
-	// クリック後もOSがタイマーなどでボタンを描き直すため、
-	// 描画の省略はせず毎回描き直す
-	RedrawSBArrows(hWnd, fix);
+	// 毎回描き直すとちらつくため、OSがボタンを描き直す可能性のある
+	// メッセージか、ボタンの状態が変化したときだけ再描画する
+	DWORD	sig = SBArrowSignature(hWnd);
+	if(SBMessageMayRedraw(msg, fix) || sig != fix->last_sig) {
+		RedrawSBArrows(hWnd, fix);
+		fix->last_sig = sig;
+	}
 
 	return result;
 }
@@ -401,6 +484,7 @@ BOOL CWheelSplitterWnd::CreateScrollBarCtrl(DWORD dwStyle, UINT nID)
 		if(hScrollBar != NULL) {
 			CSBArrowFix	*fix = new CSBArrowFix;
 			fix->pressed_button = 0;
+			fix->last_sig = 0;
 			fix->old_proc = (WNDPROC)::SetWindowLongPtr(hScrollBar,
 				GWLP_WNDPROC, (LONG_PTR)SBArrowFixWndProc);
 			::SetWindowLongPtr(hScrollBar, GWLP_USERDATA, (LONG_PTR)fix);
