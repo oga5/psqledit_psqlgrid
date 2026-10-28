@@ -24,9 +24,8 @@
 // サブクラス化して、矢印ボタンをスクロールバーの大きさに合わせて描き直す。
 
 struct CSBArrowFix {
-	WNDPROC		old_proc;
-	int			pressed_button;	// 0: 押されていない, 1: 上または左, 2: 下または右
-	DWORDLONG	draw_sig;		// 最後に描画したときの状態
+	WNDPROC	old_proc;
+	int		pressed_button;	// 0: 押されていない, 1: 上または左, 2: 下または右
 };
 
 // 矢印ボタンの矩形を取得する
@@ -93,7 +92,7 @@ static void DrawSBArrowButton(HWND hWnd, HDC hDC, const RECT *rect,
 	::DeleteObject(hFont);
 }
 
-static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix, BOOL force_redraw)
+static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix)
 {
 	// テーマが有効な場合はOS標準の描画をそのまま使う
 	if(::GetWindowTheme(hWnd) != NULL) return;
@@ -116,6 +115,12 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix, BOOL force_redraw)
 	RECT	rc_client;
 	::GetClientRect(hWnd, &rc_client);
 
+	// ボタンが押されているのはこのウィンドウがキャプチャ中で、
+	// マウスの左ボタンが押されているときだけ。
+	// WM_LBUTTONUP直後はrgstateのPRESSEDやキャプチャが残ることが
+	// あるので、物理ボタンが押されているかでも絞る
+	BOOL	captured = (::GetCapture() == hWnd);
+	BOOL	lbtn_down = (::GetKeyState(VK_LBUTTON) < 0);
 	BOOL	disabled[2], pressed[2];
 	for(int i = 0; i < 2; i++) {
 		RECT	rect;
@@ -123,22 +128,11 @@ static void RedrawSBArrows(HWND hWnd, CSBArrowFix *fix, BOOL force_redraw)
 		int		state_idx = (i == 0) ? 1 : 5;
 		disabled[i] = have_sbi &&
 			(sbi.rgstate[state_idx] & STATE_SYSTEM_UNAVAILABLE) != 0;
-		pressed[i] = !disabled[i] &&
+		pressed[i] = !disabled[i] && captured && lbtn_down &&
 			((have_sbi && (sbi.rgstate[state_idx] & STATE_SYSTEM_PRESSED) != 0) ||
 			(fix != NULL && fix->pressed_button == i + 1 &&
-			::GetCapture() == hWnd && ::PtInRect(&rect, point)));
+			::PtInRect(&rect, point)));
 	}
-
-	// 描画内容が前回と同じ場合は描き直しを省略する
-	// (WM_PAINTなどOS側の再描画が絡む場合はforce_redrawで必ず描き直す)
-	DWORDLONG	sig = (DWORDLONG)::IsWindowEnabled(hWnd)
-		| ((DWORDLONG)disabled[0] << 1) | ((DWORDLONG)disabled[1] << 2)
-		| ((DWORDLONG)pressed[0] << 3) | ((DWORDLONG)pressed[1] << 4)
-		| ((DWORDLONG)(style & 0xffff) << 16)
-		| ((DWORDLONG)rc_client.right << 32)
-		| ((DWORDLONG)rc_client.bottom << 48);
-	if(!force_redraw && fix != NULL && fix->draw_sig == sig) return;
-	if(fix != NULL) fix->draw_sig = sig;
 
 	HDC	hDC = ::GetDC(hWnd);
 	if(hDC == NULL) return;
@@ -186,7 +180,6 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 
 	LRESULT	result = ::CallWindowProc(fix->old_proc, hWnd, msg, wParam, lParam);
 
-	BOOL	force_redraw = FALSE;
 	switch(msg) {
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONDBLCLK: {
@@ -202,21 +195,12 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 		delete fix;
 		::SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
 		return result;
-	// OS側の再描画で矢印ボタンが元に戻る可能性があるメッセージでは
-	// 強制的に描き直す
-	case WM_PAINT:
-	case WM_SIZE:
-	case WM_SHOWWINDOW:
-	case WM_ENABLE:
-	case WM_STYLECHANGED:
-	case WM_THEMECHANGED:
-	case WM_SYSCOLORCHANGE:
-		force_redraw = TRUE;
-		break;
 	}
 
-	// 矢印ボタンを描き直す
-	RedrawSBArrows(hWnd, fix, force_redraw);
+	// 矢印ボタンを描き直す。
+	// クリック後もOSがタイマーなどでボタンを描き直すため、
+	// 描画の省略はせず毎回描き直す
+	RedrawSBArrows(hWnd, fix);
 
 	return result;
 }
@@ -417,7 +401,6 @@ BOOL CWheelSplitterWnd::CreateScrollBarCtrl(DWORD dwStyle, UINT nID)
 		if(hScrollBar != NULL) {
 			CSBArrowFix	*fix = new CSBArrowFix;
 			fix->pressed_button = 0;
-			fix->draw_sig = (DWORDLONG)-1;
 			fix->old_proc = (WNDPROC)::SetWindowLongPtr(hScrollBar,
 				GWLP_WNDPROC, (LONG_PTR)SBArrowFixWndProc);
 			::SetWindowLongPtr(hScrollBar, GWLP_USERDATA, (LONG_PTR)fix);
