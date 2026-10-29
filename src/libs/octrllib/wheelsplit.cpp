@@ -304,6 +304,13 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 	CSBArrowFix	*fix = (CSBArrowFix *)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	if(fix == NULL) return ::DefWindowProc(hWnd, msg, wParam, lParam);
 
+	// テーマが有効な場合はOS標準の描画・追跡をそのまま使う
+	// (WM_NCDESTROYは解放処理のため特別扱いする)
+	if(msg != WM_NCDESTROY && ::GetWindowTheme(hWnd) != NULL) {
+		SBArrowEndTrack(hWnd, fix);
+		return ::CallWindowProc(fix->old_proc, hWnd, msg, wParam, lParam);
+	}
+
 	// 矢印ボタン上のボタンダウンはOSに渡さない。OSの追跡ループは内部で
 	// ボタンを描き直して小さいグリフが残るため、押下の追跡と自動リピート
 	// は自前で行う
