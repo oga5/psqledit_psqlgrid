@@ -27,7 +27,54 @@ struct CSBArrowFix {
 	WNDPROC	old_proc;
 	int		pressed_button;	// 0: 押されていない, 1: 上または左, 2: 下または右
 	DWORD	last_sig;		// 前回描画時の状態(再描画が必要かの判定用)
+	BOOL	tracking;		// 矢印ボタンの押下を自前で追跡中
+	BOOL	repeat;			// 自動リピートスクロール中
 };
+
+#define SBARROW_TIMER_ID		0x5342
+#define SBARROW_FIRST_DELAY		400	// 自動リピート開始までの時間(ms)
+#define SBARROW_REPEAT_DELAY	50		// 自動リピートの間隔(ms)
+
+// 親ウィンドウにスクロールメッセージを送る
+static void SBSendScrollMsg(HWND hWnd, int button)
+{
+	DWORD	style = ::GetWindowLong(hWnd, GWL_STYLE);
+	UINT	msg;
+	int		code;
+	if((style & SBS_VERT) != 0) {
+		msg = WM_VSCROLL;
+		code = (button == 1) ? SB_LINEUP : SB_LINEDOWN;
+	} else {
+		msg = WM_HSCROLL;
+		code = (button == 1) ? SB_LINELEFT : SB_LINERIGHT;
+	}
+	HWND	parent = ::GetParent(hWnd);
+	if(parent != NULL) {
+		::SendMessage(parent, msg, MAKELONG(code, 0), (LPARAM)hWnd);
+	}
+}
+
+static void SBSendEndScroll(HWND hWnd)
+{
+	DWORD	style = ::GetWindowLong(hWnd, GWL_STYLE);
+	HWND	parent = ::GetParent(hWnd);
+	if(parent != NULL) {
+		::SendMessage(parent,
+			((style & SBS_VERT) != 0) ? WM_VSCROLL : WM_HSCROLL,
+			MAKELONG(SB_ENDSCROLL, 0), (LPARAM)hWnd);
+	}
+}
+
+// 矢印ボタン押下の追跡を終了する
+static void SBArrowEndTrack(HWND hWnd, CSBArrowFix *fix)
+{
+	if(fix == NULL || !fix->tracking) return;
+	fix->tracking = FALSE;
+	fix->repeat = FALSE;
+	::KillTimer(hWnd, SBARROW_TIMER_ID);
+	SBSendEndScroll(hWnd);
+	if(::GetCapture() == hWnd) ::ReleaseCapture();
+}
 
 // 矢印ボタンの矩形を取得する
 //   button: 1 = 上または左, 2 = 下または右
@@ -257,6 +304,25 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 	CSBArrowFix	*fix = (CSBArrowFix *)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	if(fix == NULL) return ::DefWindowProc(hWnd, msg, wParam, lParam);
 
+	// 矢印ボタン上のボタンダウンはOSに渡さない。OSの追跡ループは内部で
+	// ボタンを描き直して小さいグリフが残るため、押下の追跡と自動リピート
+	// は自前で行う
+	if(msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) {
+		POINT	point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		int		hit = SBArrowHitTest(hWnd, point);
+		if(hit != 0 && ::IsWindowEnabled(hWnd) && !fix->tracking) {
+			::SetCapture(hWnd);
+			fix->pressed_button = hit;
+			fix->tracking = TRUE;
+			fix->repeat = FALSE;
+			::SetTimer(hWnd, SBARROW_TIMER_ID, SBARROW_FIRST_DELAY, NULL);
+			SBSendScrollMsg(hWnd, hit);	// 押し込んだ瞬間に1回スクロール
+			RedrawSBArrows(hWnd, fix);
+			fix->last_sig = SBArrowSignature(hWnd);
+			return 0;
+		}
+	}
+
 	LRESULT	result = ::CallWindowProc(fix->old_proc, hWnd, msg, wParam, lParam);
 
 	switch(msg) {
@@ -265,9 +331,28 @@ static LRESULT CALLBACK SBArrowFixWndProc(HWND hWnd, UINT msg,
 		POINT	point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 		fix->pressed_button = SBArrowHitTest(hWnd, point);
 		break; }
+	case WM_TIMER:
+		if(wParam == SBARROW_TIMER_ID && fix->tracking) {
+			if(!fix->repeat) {
+				fix->repeat = TRUE;
+				::SetTimer(hWnd, SBARROW_TIMER_ID, SBARROW_REPEAT_DELAY,
+					NULL);
+			}
+			// カーソルがボタン上にある間だけスクロールを続ける
+			POINT	point;
+			::GetCursorPos(&point);
+			::ScreenToClient(hWnd, &point);
+			RECT	rect;
+			GetSBArrowRect(hWnd, fix->pressed_button, &rect);
+			if(::PtInRect(&rect, point)) {
+				SBSendScrollMsg(hWnd, fix->pressed_button);
+			}
+		}
+		break;
 	case WM_LBUTTONUP:
 	case WM_CANCELMODE:
 	case WM_CAPTURECHANGED:
+		SBArrowEndTrack(hWnd, fix);
 		fix->pressed_button = 0;
 		break;
 	case WM_NCDESTROY:
@@ -485,6 +570,8 @@ BOOL CWheelSplitterWnd::CreateScrollBarCtrl(DWORD dwStyle, UINT nID)
 			CSBArrowFix	*fix = new CSBArrowFix;
 			fix->pressed_button = 0;
 			fix->last_sig = 0;
+			fix->tracking = FALSE;
+			fix->repeat = FALSE;
 			fix->old_proc = (WNDPROC)::SetWindowLongPtr(hScrollBar,
 				GWLP_WNDPROC, (LONG_PTR)SBArrowFixWndProc);
 			::SetWindowLongPtr(hScrollBar, GWLP_USERDATA, (LONG_PTR)fix);
